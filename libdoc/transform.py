@@ -568,19 +568,19 @@ def read_inventory(inv_file):
 
         def read_chunks():
             decompressor = zlib.decompressobj()
-            for chunk in iter(lambda: f.read(16 * 1024), b''):
+            for chunk in iter(lambda: f.read(16 * 1024), ''):
                 yield decompressor.decompress(chunk)
             yield decompressor.flush()
 
         def split_lines(iterator):
-            buf = b''
+            buf = ''
             for chunk in iterator:
                 buf += chunk
-                line_end = buf.find(b'\n')
+                line_end = buf.find('\n')
                 while line_end != -1:
                     yield buf[:line_end].decode('utf-8')
                     buf = buf[line_end + 1:]
-                    line_end = buf.find(b'\n')
+                    line_end = buf.find('\n')
             assert not buf
 
         print('reading', inv_format[2:], 'for', title, version, '...', end="")

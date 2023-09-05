@@ -78,7 +78,7 @@ def generate(content=None, frame=None, force=False, backup=False, condensed=Fals
         if not os.path.isfile(particle_file_name):
             with io.open(particle_file_name, 'w', encoding='utf-8') as f:
                 print('Generate:', particle_file_name)
-                now = datetime.now().replace(microsecond=0).isoformat(sep=b' ')
+                now = datetime.now().replace(microsecond=0).isoformat(sep=' ')
                 ctx = {'content': content, 'name': os.path.splitext(content_info["FileHeader.libraryFile"])[0],
                        'frame': os.path.basename(frame), 'creationDateTime': now, 'build': core.BUILD}
                 f.write(template.render(ctx))

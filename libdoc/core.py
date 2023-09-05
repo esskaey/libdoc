@@ -144,9 +144,9 @@ INFOTBL_L_CONTENT = len(INFOTBL_CONTENT)
 INFOTBL_GOOD_CONTENT_WIDTH = 50
 
 VALID_FILENAME_CHARS = f'-_. {ascii_letters}{digits}'.format(letters=ascii_letters, digits=digits)
-ALL_CHARS = str.maketrans(b'', b'')
-WRONG_CHARS = b''.join(set(ALL_CHARS) - set(VALID_FILENAME_CHARS))
-ALL_CHARS = ALL_CHARS.replace(b' ', b'-').replace(b'.', b'_')
+ALL_CHARS = str.maketrans('', '')
+WRONG_CHARS = ''.join(set(ALL_CHARS) - set(VALID_FILENAME_CHARS))
+ALL_CHARS = ALL_CHARS.replace(' ', '-').replace('.', '_')
 
 def normalize(filename):
     """

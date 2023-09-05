@@ -137,7 +137,7 @@ def convertpo(inputfile, outputfile, templatefile):
     outputstring = convertor.convertstore(inputstore, templatefile)
     source_language = os.environ.get(core.LIBDOC_SOURCE_LANGUAGE)
     if source_language is not None:
-        outputstring = outputstring.replace(b'source-language="en-US"', b'source-language="{}"'.format(source_language))
+        outputstring = outputstring.replace('source-language="en-US"', 'source-language="{}"'.format(source_language))
     outputfile.write(outputstring)
     return 1
 

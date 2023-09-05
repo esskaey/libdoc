@@ -14,6 +14,6 @@ setup(
     version=__version__,
     packages=['libdoc'],
     include_package_data=True,
-    install_requires=['sphinx', 'docopt', 'unidecode', 'pytz', 'babel', 'polib','translate-toolkit'],
+    install_requires=['sphinx', 'docopt', 'unidecode', 'pytz', 'babel', 'polib','translate-toolkit','python-slugify'],
     entry_points={'console_scripts': ['libdoc=libdoc.__main__:main']},
 )
