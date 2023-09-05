@@ -1,0 +1,110 @@
+/*
+ * custom.css
+ * ~~~~~~~~~~
+ *
+ * Sphinx stylesheet -- custom theme.
+ *
+ */
+
+
+/* -- tables ---------------------------------------------------------------- */
+
+@import url("traditional.css");
+
+
+table.docutils td, table.docutils th {
+    padding: 1px 8px 1px 5px;
+    border-top: 1px solid #aaa;
+    border-left: 1px solid #aaa;
+    border-right: 1px solid #aaa;
+    border-bottom: 1px solid #aaa;
+}
+
+table.field-list {
+    border: 0 !important;
+}
+
+/* -- images in a gallery container ---------------------------------------- */
+
+.gallery {
+    display: inline-block;
+    vertical-align: top;
+    margin: 10px 10px 10px 10px;
+}
+
+div.related {
+    height: 0px;
+    line-height: 0px;
+    border-bottom: 0px solid white;
+    visibility:hidden;
+}
+
+div.footer {
+    visibility:hidden;
+}
+
+div#comments input, div#comments textarea {
+    font-family: 'Arial', sans-serif;
+}
+
+div.body h1,
+div.body h2,
+div.body h3,
+div.body h4,
+div.body h5,
+div.body h6, 
+div.line {
+    font-family: 'Arial', sans-serif;
+}
+
+div.body h1 { font-size: 150%; }
+div.body h2 { font-size: 120%; }
+div.body h3 { font-size: 110%; }
+div.body h4 { font-size: 100%; }
+
+.viewcode-back {
+    font-family: 'Arial', sans-serif;
+}
+
+p,
+dt,
+li,
+td,
+th {
+    font-family: 'Arial', sans-serif;
+}
+
+.gallery {
+    display: inline-block;
+    vertical-align: top;
+    margin: 10px 10px 10px 10px;
+}
+
+span.pre {
+    font-size: 120%;
+}
+
+div.twocol:before,
+div.twocol:after {
+    content: ".";
+    display: block;
+    visibility: hidden;
+    height: 0px;
+}
+div.twocol:after {
+    clear: both;
+}
+
+div.twocol {
+    *zoom: 1; /* for IE */
+}
+
+div.leftside {
+    float: left;
+    width: 50%;
+}
+
+div.rightside {
+    float: right;
+    width: 49%
+}

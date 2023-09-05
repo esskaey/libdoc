@@ -1,0 +1,54 @@
+{%- block doctype -%}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+{%- endblock %}
+
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset={{ encoding }}" />
+
+		{{ metatags }}
+
+		{%- block htmltitle %}
+		<title>{{ title|striptags|e }}</title>
+		{%- endblock %}
+		
+		<link rel="stylesheet" href="{{ pathto('_static/pygments.css', 1) }}" type="text/css" />
+		<link rel="stylesheet" href="{{ pathto('_static/' + style, 1) }}" type="text/css" />
+		{%- for cssfile in css_files %}
+		<link rel="stylesheet" href="{{ pathto(cssfile, 1) }}" type="text/css" />
+		{%- endfor %}
+
+		<script type="text/javascript">
+		  var DOCUMENTATION_OPTIONS = {
+			URL_ROOT:    '{{ url_root }}',
+			VERSION:     '{{ release|e }}',
+			COLLAPSE_INDEX: false,
+			FILE_SUFFIX: '{{ '' if no_search_suffix else file_suffix }}',
+			HAS_SOURCE:  {{ has_source|lower }}
+		  };
+		</script>
+		{%- for scriptfile in script_files %}
+		<script type="text/javascript" src="{{ pathto(scriptfile, 1) }}"></script>
+		{%- endfor %}
+		
+	</head>
+	<body role="document">
+		<div id="wrapper">
+			<!--
+			<div id="banner">
+				<img id="banner-logo" alt="" src="{{ pathto('_static/logo.png', 1) }}"></img>
+				<div id="banner-title">{{ title }}</div>
+				<div id="banner-subtitle">{{ project }}&nbsp;&#8212;&nbsp;{%- block spectype %}!!! UNSPECIFIED SPECTYPE !!!{%- endblock %}</div>
+				<div id="banner-version-copyright">
+					Version {{ version }}
+					<br/>
+					Copyright &copy; {{ copyright }}. All rights reserved.
+				</div>
+			</div>
+			-->
+			<div id="document" role="main">
+				{% block body %} {% endblock %}
+			</div>
+		</div>
+	</body>
+</html>

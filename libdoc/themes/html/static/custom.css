@@ -1,0 +1,55 @@
+/*
+ * custom.css
+ * ~~~~~~~~~~
+ *
+ * Sphinx stylesheet -- custom theme.
+ *
+ */
+
+
+/* -- tables ---------------------------------------------------------------- */
+
+@import url("sphinxdoc.css");
+
+table.docutils td, table.docutils th {
+    padding: 1px 8px 1px 5px;
+    border-top: 1px solid #aaa;
+    border-left: 1px solid #aaa;
+    border-right: 1px solid #aaa;
+    border-bottom: 1px solid #aaa;
+}
+
+table.field-list {
+    border: 0 !important;
+}
+
+.gallery {
+    display: inline-block;
+    vertical-align: top;
+    margin: 10px 10px 10px 10px;
+}
+
+div.twocol:before,
+div.twocol:after {
+    content: ".";
+    display: block;
+    visibility: hidden;
+    height: 0px;
+}
+div.twocol:after {
+    clear: both;
+}
+
+div.twocol {
+    *zoom: 1; /* for IE */
+}
+
+div.leftside {
+    float: left;
+    width: 50%;
+}
+
+div.rightside {
+    float: right;
+    width: 49%
+}
