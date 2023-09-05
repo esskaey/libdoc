@@ -7,15 +7,12 @@ The core module
 All was is necessary...
 """
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import print_function
 import json
 import codecs
 import os
 import re
 import sys
-from string import ascii_letters, digits, maketrans
+from string import ascii_letters, digits
 from unidecode import unidecode
 
 from .exceptions import BuilderError, LibDocError
@@ -146,23 +143,22 @@ INFOTBL_L_CONTENT = len(INFOTBL_CONTENT)
 
 INFOTBL_GOOD_CONTENT_WIDTH = 50
 
-VALID_FILENAME_CHARS = b'-_. {letters}{digits}'.format(letters=ascii_letters, digits=digits)
-ALL_CHARS = maketrans(b'', b'')
+VALID_FILENAME_CHARS = f'-_. {ascii_letters}{digits}'.format(letters=ascii_letters, digits=digits)
+ALL_CHARS = str.maketrans(b'', b'')
 WRONG_CHARS = b''.join(set(ALL_CHARS) - set(VALID_FILENAME_CHARS))
 ALL_CHARS = ALL_CHARS.replace(b' ', b'-').replace(b'.', b'_')
-
 
 def normalize(filename):
     """
     http://stackoverflow.com/questions/295135/turn-a-string-into-a-valid-filename-in-python
     """
     cleaned_filename = unidecode(filename).encode('ASCII', 'ignore')
-    normalized_filename = cleaned_filename.translate(ALL_CHARS, WRONG_CHARS)
-    return re.sub(r"(?P<vc>[._-])(?P=vc)+", r"\g<vc>", normalized_filename)
+    normalized_filename = cleaned_filename.translate(str.maketrans('', '', WRONG_CHARS.decode('ascii')))
+    return re.sub(r"(?P<vc>[._-])(?P=vc)+", r"\g<vc>", normalized_filename.decode('ascii'))
 
 
 def escape_iec_names(name):
-    assert isinstance(name, unicode)
+    assert isinstance(name, str)  # Changed from unicode
     name = name.replace('_.', '\_.')
     if name.startswith('_'):
         name = '\_{n}'.format(n=name[1:])
@@ -172,7 +168,7 @@ def escape_iec_names(name):
 
 
 def escape_folder_names(name):
-    assert isinstance(name, unicode)
+    assert isinstance(name, str)  # Changed from unicode
     return name.replace('.', '\.').replace('_', '\_').replace(':', '\:')
 
 
@@ -183,7 +179,8 @@ def read_conf(config_file_path):
     path = os.path.join(config_file_path, CONF).encode(fs_encoding)
     glb = {'__file__': path}
     conf = {}
-    execfile(path, glb, conf)
+    with open(path, 'r', encoding='utf-8') as f:
+        exec(f.read(), glb, conf)  # Changed from execfile
     os.chdir(old_dir)
     return conf
 
@@ -195,8 +192,23 @@ def exec_hook(hook_file_path, args):
         old_dir = os.getcwd()
         os.chdir(os.path.dirname(hook_file_path))
         sys.argv = args
-        execfile(hook_file_path, glb, conf)
+        with open(hook_file_path, 'r', encoding='utf-8') as f:
+            exec(f.read(), glb, conf)  # Changed from execfile
         os.chdir(old_dir)
+
+
+def get_configuration():
+    basedir = get_base_dir()
+    conf_file_path = os.path.join(os.path.abspath(basedir), BINARIES, CONFIG_JSON)
+
+    if conf_file_path is not None and os.path.isfile(conf_file_path):
+        with codecs.open(conf_file_path, 'r', encoding='utf-8') as f:
+            try:
+                conf = json.load(f)
+            except:
+                raise LibDocError("Error during parsing configuration file %s" % conf_file_path)
+        return conf
+    return None
 
 
 def get_version(version):
@@ -214,17 +226,3 @@ def get_base_dir():
         # we are running in a normal Python environment
         basedir = os.path.dirname(__file__)
     return basedir
-
-
-def get_configuration():
-    basedir = get_base_dir()
-    conf_file_path = os.path.join(os.path.abspath(basedir), BINARIES, CONFIG_JSON)
-
-    if conf_file_path is not None and os.path.isfile(conf_file_path):
-        with codecs.open(conf_file_path, 'r', encoding='utf-8') as f:
-            try:
-                conf = json.load(f)
-            except:
-                raise LibDocError("Error during parsing configuration file %s" % conf_file_path)
-        return conf
-    return None

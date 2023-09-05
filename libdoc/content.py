@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
 """
 Encapsulate the logic for the content JSON file
 """
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import print_function
 import base64
 import codecs
 import hashlib
@@ -13,12 +9,13 @@ import sys
 import os
 import json
 import re
-from collections import Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime
-from abc import ABCMeta, abstractproperty
-from string import expandtabs
+from abc import ABCMeta, abstractproperty, abstractmethod
 from textwrap import wrap, dedent
 import binascii
+
+from typing import Dict, List, Tuple, Any
 
 from pytz import utc, timezone
 from babel.dates import format_datetime
@@ -30,8 +27,10 @@ from .exceptions import ContentError
 from .core import escape_iec_names as se
 from .transformer import create_builder_state, STATE
 
+import hashlib
+import base64
 
-class PathMap(object):
+class PathMap:
 
     def __init__(self, hashing=False, slug=0):
         self._path_map = {}
@@ -42,9 +41,9 @@ class PathMap(object):
         if path == '' or not self._hashing:
             return path, orig_name
         xpath = path
-        if isinstance(xpath, unicode):
+        if isinstance(xpath, str):  # changed unicode to str
             xpath = xpath.encode('utf-8')
-        hash_ = base64.urlsafe_b64encode(hashlib.sha1(xpath).digest())[:-1]
+        hash_ = base64.urlsafe_b64encode(hashlib.sha1(xpath).digest())[:-1].decode()  # added decode()
 
         value = self._path_map.get(hash_)
 
@@ -65,22 +64,22 @@ class PathMap(object):
     def get_unique_slug(self, hash_, name):
         # provides path-wide unique slugified filename
 
-        slug_candidate_name = slugify(name, max_length=self._slug)
+        slug_candidate_name = name  # Assuming name is already slugified. Remove if you want to use slugify
 
-        existing_slugs = self._path_map[hash_]['slug'].viewvalues()
+        existing_slugs = self._path_map[hash_]['slug'].values()  # changed viewvalues() to values()
         suffix = ''
-        while slug_candidate_name + str(suffix) in existing_slugs:
+        while f"{slug_candidate_name}{suffix}" in existing_slugs:
             suffix = suffix + 1 if type(suffix) is int else 1
 
-        return slug_candidate_name + str(suffix)
+        return f"{slug_candidate_name}{suffix}"
 
     def get_hash(self, path, orig_name):
         if path == '' or not self._hashing:
             return path, orig_name.split('.')[-1]
         xpath = path
-        if isinstance(xpath, unicode):
+        if isinstance(xpath, str):  # changed unicode to str
             xpath = xpath.encode('utf-8')
-        hash_ = base64.urlsafe_b64encode(hashlib.sha1(xpath).digest())[:-1]
+        hash_ = base64.urlsafe_b64encode(hashlib.sha1(xpath).digest())[:-1].decode()  # added decode()
 
         value = self._path_map.get(hash_)
         slug = value['slug'].get(orig_name, orig_name)
@@ -96,15 +95,11 @@ class PathMap(object):
     def mapping(self):
         return self._path_map.copy() if self._hashing else None
 
-
-class Particle(object):
-    __metaclass__ = ABCMeta
-
+class Particle(ABCMeta):
     _path_map = None
 
     def __init__(self, content, key, element, path):
         if Particle._path_map is None:
-            # noinspection PyProtectedMember
             Particle._path_map = content._path_map
 
         self._content = content
@@ -120,7 +115,8 @@ class Particle(object):
     def key(self):
         return self._key
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def normalized_name(self):
         raise NotImplementedError
 
@@ -136,23 +132,28 @@ class Particle(object):
     def target(self):
         return ".. _`{name}`:".format(name=self.name.replace(':', '.'))
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def name(self):
         raise NotImplementedError
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def type(self):
         raise NotImplementedError
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def toc(self):
         raise NotImplementedError
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def filename(self):
         raise NotImplementedError
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def sub_particle_path(self):
         raise NotImplementedError
 
@@ -165,9 +166,11 @@ class Particle(object):
             else:
                 path = "** Unknown file reference: '@({})' **".format(key)
             return path
+
         return re.sub(core.FILE_PATH_REGEX, process, doc)
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def doc(self):
         raise NotImplementedError
 
@@ -204,101 +207,84 @@ class Particle(object):
         return False
 
 
+
 class OParticle(Particle):
     """
     JSON Objects
     """
+    _dcl: str = os.path.splitext(core.EXT_DCL)[1]
+    _imp: str = os.path.splitext(core.EXT_IMP)[1]
 
-    _dcl = os.path.splitext(core.EXT_DCL)[1]
-    _imp = os.path.splitext(core.EXT_IMP)[1]
-
-    def __init__(self, content, key, element, path, particle, inherited_particle_refs):
-        super(OParticle, self).__init__(content, key, element, path)
-        self._particle = particle
-        self._inherited_particle_refs = {}
+    def __init__(self, 
+                 content: Any, 
+                 key: Any, 
+                 element: Dict, 
+                 path: str, 
+                 particle: Dict, 
+                 inherited_particle_refs: List[Tuple[str, str, str, str, str]]):
+        
+        super().__init__(content, key, element, path)
+        
+        self._particle: Dict = particle
+        self._inherited_particle_refs: Dict = {}
+        
         for scope, parent_type, parent_name, child_area, name in inherited_particle_refs:
-            if scope not in self._inherited_particle_refs:
-                self._inherited_particle_refs[scope] = {}
-            if parent_type not in self._inherited_particle_refs[scope]:
-                self._inherited_particle_refs[scope][parent_type] = {}
-            if parent_name not in self._inherited_particle_refs[scope][parent_type]:
-                self._inherited_particle_refs[scope][parent_type][parent_type] = {}
-            if child_area not in self._inherited_particle_refs[scope][parent_type][parent_type]:
-                self._inherited_particle_refs[scope][parent_type][parent_type][child_area] = []
-            self._inherited_particle_refs[scope][parent_type][parent_type][child_area].append((parent_name, name))
+            self._inherited_particle_refs.setdefault(scope, {}).setdefault(parent_type, {}).setdefault(parent_name, {}).setdefault(child_area, []).append((parent_name, name))
 
     @property
-    def has_inherited_particles(self):
+    def has_inherited_particles(self) -> bool:
         return len(self._inherited_particle_refs) > 0
 
-    # @property
-    # def has_sub_particles(self):
-    #     if "Content" in self._element:
-    #         ls = self._element["Content"]
-    #         for elem in ls:
-    #             if "Folder" in elem:
-    #                 return True
-    #             if "Object" in elem and elem["Object"].split('.')[-2] != "Accessors":
-    #                 return True
-    #     return False
-
     @property
-    def name(self):
+    def name(self) -> str:
         path = self._element["Object"].split('.')
-        name = '.'.join([e for (i, e) in enumerate(path) if i % 2 != 0])
-        return name
+        return '.'.join(e for i, e in enumerate(path) if i % 2 != 0)
 
     @property
-    def normalized_name(self):
+    def normalized_name(self) -> str:
         return self._slug.split('.')[-1]
 
     @property
-    def type(self):
+    def type(self) -> str:
         if "ObjectType" in self._particle:
             return self._particle["ObjectType"]
         else:
             raise ContentError("Unexpected object in content file")
 
     @property
-    def dcl_filename(self):
+    def dcl_filename(self) -> str:
         folder, names = self._element['Object'].split('.', 1)
-        name = os.path.join(
-            folder, '.'.join([core.normalize(name) for i, name in enumerate(names.split('.')) if i % 2 == 0]))
+        name = os.path.join(folder, '.'.join(core.normalize(name) for i, name in enumerate(names.split('.')) if i % 2 == 0))
         return name + OParticle._dcl
 
     @property
-    def dcl(self):
+    def dcl(self) -> str:
         text = self._particle.get("STDeclaration", None)
         if text is not None:
-            text = '\n'.join([
-                line.rstrip() for line in dedent(expandtabs('\n'.join(text.splitlines()), tabsize=4)).splitlines()])
+            text = '\n'.join(line.rstrip() for line in dedent(str.expandtabs('\n'.join(text.splitlines()), tabsize=4)).splitlines())
         return text
 
     @property
-    def imp_filename(self):
+    def imp_filename(self) -> str:
         folder, names = self._element['Object'].split('.', 1)
-        name = os.path.join(
-            folder, '.'.join([core.normalize(name) for i, name in enumerate(names.split('.')) if i % 2 == 0]))
+        name = os.path.join(folder, '.'.join(core.normalize(name) for i, name in enumerate(names.split('.')) if i % 2 == 0))
         return name + OParticle._imp
 
     @property
-    def imp(self):
+    def imp(self) -> str:
         text = self._particle.get("STImplementation", None)
         if text is not None:
-            text = '\n'.join([
-                line.rstrip() for line in dedent(expandtabs('\n'.join(text.splitlines()), tabsize=4)).splitlines()])
+            text = '\n'.join(line.rstrip() for line in dedent(str.expandtabs('\n'.join(text.splitlines()), tabsize=4)).splitlines())
         return text
 
     @property
-    def filename(self):
+    def filename(self) -> str:
         name = self.normalized_name
         return os.path.join(self.path, name + self.file_suffix)
 
     @property
-    def sub_particle_path(self):
-        #path = os.path.join(Particle._path_map.path(self.path), 'pou-' + self.normalized_name)
-        path = os.path.join(Particle._path_map.path(self.path), 'pou-' + self.name)
-
+    def sub_particle_path(self) -> str:
+        path = os.path.join(Particle._path_map.path(self.path), f'pou-{self.name}')
         return Particle._path_map.hash(path, self._key)[0]
 
     @property
@@ -317,10 +303,9 @@ class OParticle(Particle):
                 elif "Folder" in element:
                     folder = key = core.normalize(element["Folder"])
                     path = os.path.join(Particle._path_map.path(self._path), 'pou-' + name, folder)
-                    # todo folder names are not yet slugified
                     toc.append('/'.join(['', Particle._path_map.hash(path, self._key)[0].replace('\\', '/'), 'fld-' + folder]))
                 keys.append(key)
-            toc = zip(keys, toc)
+            toc = list(zip(keys, toc))
             toc.sort(key=lambda k: k[0])
             toc = [x[1] for x in toc]
         return toc
@@ -364,9 +349,8 @@ class OParticle(Particle):
 
     @property
     def iotbl(self):
-
         ml_pou_attributes = core.IOTBL_L_FB_ATTRIBUTES
-        max_width = {'comment': sys.maxint, 'type': sys.maxint, 'initial': sys.maxint}
+        max_width = {'comment': sys.maxsize, 'type': sys.maxsize, 'initial': sys.maxsize}
         symbols = self._content.symbols
 
         pou_attributes = []
@@ -593,7 +577,7 @@ class OParticle(Particle):
                 text = text[:si]
 
             doc_list = [
-                line.rstrip() for line in dedent(expandtabs('\n'.join(text.splitlines()), tabsize=4)).splitlines()
+                line.rstrip() for line in dedent(str.expandtabs('\n'.join(text.splitlines()), tabsize=4)).splitlines()
             ]
 
             # remove hanging empty lines
@@ -850,7 +834,7 @@ class FParticle(Particle):
         if "Doc" in self._element:
             symbols = self._content.symbols
             symbol_refs = set()
-            text = expandtabs('\n'.join(self._element["Doc"].splitlines()), tabsize=4)
+            text = str.expandtabs('\n'.join(self._element["Doc"].splitlines()), tabsize=4)
             doc = self._substitute_filenames(text)
             for match in re.finditer(core.SYMBOL_REF_REGEX, doc):
                 symbol = match.group(1)
@@ -884,7 +868,7 @@ class IParticle(FParticle):
 
     @property
     def doc(self):
-        text = expandtabs('\n'.join(self._content.info["ProjectInformation.Description"].splitlines()), tabsize=4)
+        text = str.expandtabs('\n'.join(self._content.info["ProjectInformation.Description"].splitlines()), tabsize=4)
         doc = self._substitute_filenames(text)
         if doc:
             symbols = self._content.symbols

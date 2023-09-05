@@ -6,9 +6,6 @@ Export
 This module provides functionality for exporting the content out of a CODESYS library
 """
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import print_function
 import sys
 import os
 import re

@@ -5,9 +5,6 @@ Merge
 
 This module provide functionality for mering content and frame data
 """
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import print_function
 import codecs
 import os
 import fnmatch
