@@ -1,15 +1,8 @@
 # -*- coding: utf-8 -*-
-
-from __future__ import print_function
-from __future__ import unicode_literals
-from __future__ import absolute_import
-
 import ctypes
 import os
-import sys
-
+from typing import Optional
 from . import core
-
 
 class HtmlSvgConverter(object):
 
@@ -57,10 +50,7 @@ class HtmlSvgConverter(object):
         if self._init_ok:
             self.wkhtmltoimage_deinit()
 
-    def html_to_svg(self, html, svg, width="320"):
-        assert isinstance(html, unicode)
-        assert isinstance(svg, unicode)
-        assert isinstance(width, unicode)
+    def html_to_svg(self, html: str, svg: str, width: str = "320") -> int:
         gs = self.wkhtmltoimage_create_global_settings()
         ret = self.wkhtmltoimage_set_global_setting(gs, "screenWidth", width)
         ret = self.wkhtmltoimage_set_global_setting(gs, "fmt", "svg")
@@ -75,7 +65,6 @@ class HtmlSvgConverter(object):
 class HtmlPdfConverter(object):
     def __init__(self):
         self._init_ok = 0
-
         basedir = core.get_base_dir()
         self.wkdll = ctypes.WinDLL(os.path.join(os.path.abspath(basedir), core.BINARIES, 'wkhtmltox.dll'))
 
@@ -127,11 +116,8 @@ class HtmlPdfConverter(object):
         if self._init_ok:
             self.wkhtmltopdf_deinit()
 
-    def html_to_pdf(self, html_file, pdf_file, doc_title, copyright, title_page_html_file, toc_xsl_file):
-        assert isinstance(pdf_file, unicode)
-        assert isinstance(doc_title, unicode)
-        assert isinstance(title_page_html_file, unicode)
-
+    def html_to_pdf(self, html_file: str, pdf_file: str, doc_title: str, copyright: str, 
+                    title_page_html_file: str, toc_xsl_file: str) -> None:
         global_settings = self.wkhtmltopdf_create_global_settings()
         ret = self.wkhtmltopdf_set_global_setting(global_settings, 'size.width', '21cm')
         ret = self.wkhtmltopdf_set_global_setting(global_settings, 'size.height', '29.7cm')

@@ -3,10 +3,6 @@
     Functionality for generating a fresh frame document
 """
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import print_function
-import io
 import os
 import sys
 import shutil
@@ -29,10 +25,7 @@ def fresh(frame=None):
         config_path = os.path.dirname(frame)
 
     for folder in [core.BUILD, 'Images', os.path.basename(frame)]:
-        try:
-            os.mkdir(os.path.join(config_path, folder))
-        except OSError:
-            pass
+        os.makedirs(os.path.join(config_path, folder), exist_ok=True)
 
     if frame is None or not os.path.isdir(frame):
         raise FrameError('Not able to find the frame structure')
@@ -51,9 +44,9 @@ def fresh(frame=None):
 
     template = env.get_template('q_conf.py')
     template_file_name = os.path.join(config_path, core.CONF)
-    with io.open(template_file_name, 'w', encoding='utf-8') as f:
+    with open(template_file_name, 'w', encoding='utf-8') as f:
         print('Generate:', template_file_name)
-        now = datetime.now().replace(microsecond=0).isoformat(sep=b' ')
+        now = datetime.now().replace(microsecond=0).isoformat(sep=' ')
         ctx = {'frame': os.path.basename(frame), 'creationDateTime': now}
         f.write(template.render(ctx))
         f.write('\n')
@@ -62,7 +55,7 @@ def fresh(frame=None):
 
     template = env.get_template(core.TODO_RST)
     template_file_name = os.path.join(frame, core.TODO_RST)
-    with io.open(template_file_name, 'w', encoding='utf-8') as f:
+    with open(template_file_name, 'w', encoding='utf-8') as f:
         print('Generate:', template_file_name)
         ctx = {}
         f.write(template.render(ctx))
@@ -70,14 +63,11 @@ def fresh(frame=None):
 
     template = env.get_template('q_index.rst')
     template_file_name = os.path.join(frame, core.INDEX_RST)
-    with io.open(template_file_name, 'w', encoding='utf-8') as f:
+    with open(template_file_name, 'w', encoding='utf-8') as f:
         print('Generate:', template_file_name)
         ctx = {}
         f.write(template.render(ctx))
         f.write('\n')
 
     for name in core.FRAME_SPECIALS:
-        try:
-            os.mkdir(os.path.join(frame, name))
-        except OSError:
-            pass
+        os.makedirs(os.path.join(frame, name), exist_ok=True)

@@ -3,21 +3,16 @@
 Clean
 ~~~~~
 
-The clean module provide functionality for removing some specified parts of a JSON file.
+The clean module provides functionality for removing some specified parts of a JSON file.
 """
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import print_function
-from collections import Sequence
+from collections.abc import Sequence  # Changed from collections to collections.abc
 import os
 import fnmatch
 import json
-import codecs
 
 from . import core
 from .exceptions import ContentError
-
 
 class Cleaner(object):
     """
@@ -34,7 +29,7 @@ class Cleaner(object):
         self._conf = None
 
         if conf_file_path is not None and os.path.isfile(conf_file_path):
-            with codecs.open(conf_file_path, 'r', encoding='utf-8') as f:
+            with open(conf_file_path, 'r', encoding='utf-8') as f:
                 self._conf = json.load(f)
         else:
             self._conf = {
@@ -236,12 +231,12 @@ class Cleaner(object):
         :param content_file_path: path to the JSON file containing the data structure
         :return: The cleaned data structure
         """
-        with codecs.open(content_file_path, 'r', encoding='utf-8') as f:
+        with open(content_file_path, 'r', encoding='utf-8') as f:
             self._content = json.load(f)
 
         for area in self._areas:
             particles = self._content[area]
-            for particle in particles.itervalues():
+            for particle in particles.values():
                 self._all.add(".".join([area, particle["Name"]]))
                 for sub in self._sub_areas:
                     if sub in particle:
@@ -314,7 +309,7 @@ def clean(content=None, clean_content=None):
     if not os.path.isfile(conf_file):
         cleaner.dump_conf(conf_file)
 
-    with codecs.open(clean_content, 'w', encoding='utf-8') as f:
+    with open(clean_content, 'w', encoding='utf-8') as f:
         json.dump(content, f, indent=4, separators=(',', ': '), sort_keys=True, ensure_ascii=False)
 
     return 0

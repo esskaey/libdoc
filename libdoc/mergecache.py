@@ -3,32 +3,25 @@
     A module...
 """
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import print_function
-import codecs
 import os
 import fnmatch
 import json
 import re
 import io
 
-from . import core
-
+from . import core  # assuming this import is Python 3.10 compatible
 
 def create_merge_cache(env, frame, force=False, exclude=None):
     if exclude is None:
         exclude = []
 
     mergecache = os.path.join(frame, core.MERGE_CACHE)
-    try:
-        os.mkdir(mergecache)
-    except OSError:
-        pass
+    
+    os.makedirs(mergecache, exist_ok=True)
 
     cache = {}
     ext = os.path.splitext(core.EXT_JSON)[1]
-    cache_filename = os.path.join(mergecache, "{name}{ext}".format(name=core.MERGE_CACHE, ext=ext))
+    cache_filename = os.path.join(mergecache, f"{core.MERGE_CACHE}{ext}")
 
     if os.path.isfile(cache_filename) and not force:
         return
@@ -40,7 +33,7 @@ def create_merge_cache(env, frame, force=False, exclude=None):
             continue
         template = env.get_template(name)
         template_filename = template.filename
-        with io.open(template_filename, 'r', encoding='utf-8') as f:
+        with open(template_filename, 'r', encoding='utf-8') as f:
             spec_active = 0
             text = None
             s_flag = False
@@ -79,5 +72,5 @@ def create_merge_cache(env, frame, force=False, exclude=None):
                         cache[key] = '\n'.join(text.getvalue().split('\n')[j:k])
                         text.close()
 
-    with codecs.open(cache_filename, 'w', encoding='utf-8') as f:
+    with open(cache_filename, 'w', encoding='utf-8') as f:
         json.dump(cache, f, sort_keys=True, separators=(',', ': '), indent=4, ensure_ascii=False)

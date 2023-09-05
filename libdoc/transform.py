@@ -73,13 +73,6 @@
             </UL>
         </UL>
 """
-
-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import print_function
-import codecs
-import io
 import glob
 import json
 import os
@@ -89,11 +82,14 @@ import zipfile
 import zlib
 import fnmatch
 import re
-from datetime import datetime
+import io
 
-import imp
+from datetime import datetime
+import importlib.util
+
 import polib
-import sphinx.cmdline
+from sphinx.cmd.build import build_main  # Update import
+
 import unicodedata
 
 from . import core
@@ -112,15 +108,17 @@ def transform(builder='html', source=None, language=None):
 
     if source is None or not os.path.isdir(source):
         raise SourceError('Not able to find the source structure')
+
     source = os.path.abspath(source)
     config = os.path.normpath(os.path.join(source, os.path.pardir))
     build = os.path.join(config, core.BUILD, os.path.basename(source))
+
     create_builder_state(config, builder, language)
+
     transformer_function = transformers.get(builder)
     if transformer_function is None:
-        raise BuilderError('The {builder} format is not supported'.format(builder=builder))
+        raise BuilderError(f'The {builder} format is not supported')
     else:
-        # noinspection PyCallingNonCallable
         return transformer_function(config, build, source, language)
 
 
@@ -152,7 +150,7 @@ def build_hhp(config, build, source, language=None):
     destination = os.path.join(build, 'chm')
     if language is not None:
         destination = os.path.join(destination, language)
-    code = sphinx.cmdline.main(['sphinx-build',
+    code = build_main(['sphinx-build',
                                 '-b', 'htmlhelp',
                                 '-c', config,  # The directory with conf.py,
                                 '-d', doctrees,
@@ -178,7 +176,7 @@ def fix_hhc(hhc):
     """
     state = 0
     output = io.StringIO()
-    with io.open(hhc, "r", encoding='iso-8859-1') as f:
+    with open(hhc, "r", encoding='iso-8859-1') as f:
         for line in f:
             line = line.rstrip()
             if state == 0 and '<OBJECT type="text/site properties">' in line:
@@ -200,7 +198,7 @@ def fix_hhc(hhc):
                 line = '</UL> <!-- LibDoc -->\n' + line
                 state = 99
             print(line, file=output)
-    with io.open(hhc, 'w', encoding='iso-8859-1') as f:
+    with open(hhc, 'w', encoding='iso-8859-1') as f:
         f.write(output.getvalue())
 
 
@@ -209,7 +207,7 @@ def compile_hhp(hhp):
     if not os.path.isfile(hhp):
         raise HHCError("Not able to find project file")
     chm = None
-    with io.open(hhp, 'r', encoding='iso-8859-1') as f:
+    with open(hhp, 'r', encoding='iso-8859-1') as f:
         for line in f:
             if 'Compiled file=' not in line:
                 continue
@@ -250,7 +248,7 @@ def make_html(config, build, source, language=None):
         destination = os.path.join(build, 'html')
     else:
         destination = os.path.join(build, 'html', language)
-    code = sphinx.cmdline.main(['sphinx-build',
+    code = build_main(['sphinx-build',
                                 '-b', 'html',
                                 '-c', config,  # The directory with conf.py,
                                 '-d', doctrees,
@@ -271,7 +269,7 @@ def make_pdf(config, build, source, language=None):
     else:
         source_dir = os.path.join(build, 'pdf', language, 'html')
         destination_dir = os.path.join(build, 'pdf', 'language')
-    code = sphinx.cmdline.main(['sphinx-build',
+    code = build_main(['sphinx-build',
                                 '-b', 'singlehtml',
                                 '-c', config,  # The directory with conf.py
                                 '-d', doctrees,
@@ -284,7 +282,7 @@ def make_pdf(config, build, source, language=None):
         return code
 
     conf_py_file = os.path.join(config, 'conf.py')
-    conf_module = imp.load_source('conf', conf_py_file)
+    conf_module = importlib.util.spec_from_file_location('conf', conf_py_file)
     cover_html_file = os.path.join(config, 'Theme', 'pdf', 'static', 'cover.html')
     cover_dest_html_file = os.path.join(source_dir, 'cover.html')
     toc_xsl_file = os.path.join(config, 'Theme', 'pdf', 'static', 'toc.xsl')
@@ -295,13 +293,13 @@ def make_pdf(config, build, source, language=None):
         os.makedirs(destination_dir)
 
     # Create a temporary cover.html file which reflects the document variables
-    with open(cover_html_file, 'r') as f_cover_html:
+    with open(cover_html_file, 'r',encoding="utf-8") as f_cover_html:
         cover_html = f_cover_html.read()
     cover_html = cover_html.replace('[title]', conf_module.project)
     cover_html = cover_html.replace('[copyright]', conf_module.copyright)
     cover_html = cover_html.replace('[version]', conf_module.version)
     cover_html = cover_html.replace('[subtitle]', '')   # TODO
-    with open(cover_dest_html_file, 'w') as f_cover_temp_html:
+    with open(cover_dest_html_file, 'w',encoding="utf-8") as f_cover_temp_html:
         f_cover_temp_html.write(cover_html)
 
     with HtmlPdfConverter() as converter:
@@ -314,8 +312,8 @@ def make_pdf(config, build, source, language=None):
 def pdf_name_from_project(project):
     value = project
     value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
-    value = unicode(re.sub('[^\w\s-]', '', value).strip().lower())
-    value = unicode(re.sub('[-\s]+', '-', value))
+    value = re.sub('[^\w\s-]', '', value).strip().lower()
+    value = re.sub('[-\s]+', '-', value)
     return value
 
 
@@ -325,7 +323,7 @@ def make_pot(config, build, source, language=None):
         language = None
 
     doctrees = os.path.join(build, 'pottrees')
-    code = sphinx.cmdline.main(['sphinx-build',
+    code = build_main(['sphinx-build',
                                 '-b', 'gettext',
                                 '-c', config,  # The directory with conf.py,
                                 '-d', doctrees,
@@ -399,7 +397,7 @@ def make_latex(config, build, source, language=None):
     destination = os.path.join(build, 'latex')
     if language is not None:
         destination = os.path.join(destination, language)
-    code = sphinx.cmdline.main(['sphinx-build',
+    code = build_main(['sphinx-build',
                                 '-b', 'latex',
                                 '-c', config,  # The directory with conf.py,
                                 '-d', doctrees,
@@ -417,7 +415,7 @@ def make_json(config, build, source, language=None):
     destination = os.path.join(build, 'json')
     if language is not None:
         destination = os.path.join(destination, language)
-    code = sphinx.cmdline.main(['sphinx-build',
+    code = build_main(['sphinx-build',
                                 '-b', 'json',
                                 '-c', config,  # The directory with conf.py,
                                 '-d', doctrees,
@@ -435,7 +433,7 @@ def make_xml(config, build, source, language=None):
     destination = os.path.join(build, 'xml')
     if language is not None:
         destination = os.path.join(destination, language)
-    code = sphinx.cmdline.main(['sphinx-build',
+    code = build_main(['sphinx-build',
                                 '-b', 'xml',
                                 '-c', config,  # The directory with conf.py,
                                 '-d', doctrees,
@@ -454,7 +452,7 @@ def make_lmd(config, build, source, language=None):
     destination = lmd_folder
     if language is not None:
         destination = os.path.join(lmd_folder, language)
-    code = sphinx.cmdline.main(['sphinx-build',
+    code = build_main(['sphinx-build',
                                 '-b', 'html',
                                 '-c', config,  # The directory with conf.py,
                                 '-d', doctrees,
@@ -468,7 +466,7 @@ def make_lmd(config, build, source, language=None):
 
     try:
         # read the frame information file to get title, version and company of the related library
-        with codecs.open(os.path.join(source, 'frame.json'), 'r', encoding='utf-8') as f:
+        with open(os.path.join(source, 'frame.json'), 'r', encoding='utf-8') as f:
             print('reading frame info ...', end="")
             frame_data = json.load(f)
     except IOError:
@@ -530,7 +528,7 @@ def make_lmd(config, build, source, language=None):
     if extensions is not None:
         data.update({'extensions': extensions})
     print('generate {} ...'.format(core.MANIFEST_JSON), end="")
-    with codecs.open(os.path.join(destination, core.MANIFEST_JSON), 'w', encoding='utf-8') as f:
+    with open(os.path.join(destination, core.MANIFEST_JSON), 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=4, sort_keys=True, separators=(',', ': '), ensure_ascii=False)
     print(" done")
 
@@ -557,7 +555,7 @@ def make_lmd(config, build, source, language=None):
 def read_inventory(inv_file):
 
     data = {}
-    with io.open(inv_file, 'rb') as f:
+    with open(inv_file, 'rb') as f:
         line = f.readline()
         inv_format = line.rstrip().decode('utf-8')
         line = f.readline()
