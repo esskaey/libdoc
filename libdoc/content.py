@@ -115,8 +115,7 @@ class Particle(ABCMeta):
     def key(self):
         return self._key
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def normalized_name(self):
         raise NotImplementedError
 
@@ -132,28 +131,23 @@ class Particle(ABCMeta):
     def target(self):
         return ".. _`{name}`:".format(name=self.name.replace(':', '.'))
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def name(self):
         raise NotImplementedError
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def type(self):
         raise NotImplementedError
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def toc(self):
         raise NotImplementedError
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def filename(self):
         raise NotImplementedError
-
-    @property
-    @abstractmethod
+    
+    @abstractproperty
     def sub_particle_path(self):
         raise NotImplementedError
 
@@ -169,8 +163,7 @@ class Particle(ABCMeta):
 
         return re.sub(core.FILE_PATH_REGEX, process, doc)
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def doc(self):
         raise NotImplementedError
 
