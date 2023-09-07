@@ -12,7 +12,7 @@
 # version info for better programmatic use
 # possible values for 3rd element: 'alpha', 'beta', 'tc', 'rc', 'final'
 # 'final' has 0 as the last element
-version_info = (3, 5, 12, 0, 'final', 0)
+version_info = (3, 5, 13, 0, 'final', 0)
 if version_info[4] == "final":
     __version__ = "{v[0]}.{v[1]}.{v[2]}.{v[3]}".format(v=version_info)
 else:

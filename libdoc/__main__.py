@@ -74,9 +74,6 @@ Commands:
     fresh           Tries to generate a fresh frame documentation folder structure in the current working directory.
                     The parameter <frame> is optional and defaults to "Frame".
 """
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from __future__ import print_function
 import multiprocessing
 import sys
 
@@ -99,7 +96,7 @@ def main(argv=None):
         argv = sys.argv[1:]
     code = 0
     kwargs = {}
-    argv = [unicode(arg, 'iso-8859-1') for arg in argv]
+    argv = [arg for arg in argv]
 
     formats = sorted(builders)
     doc = __doc__.format(
