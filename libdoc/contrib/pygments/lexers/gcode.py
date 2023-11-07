@@ -1,8 +1,8 @@
 ﻿# -*- coding: utf-8 -*-
 
 from pygments.lexer import RegexLexer
-from pygments.token import *
-import re
+from pygments.token import Comment, Name,Keyword,Text,Literal, String
+
 
 __all__ = ['GCodeLexer']
 

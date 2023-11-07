@@ -1,7 +1,7 @@
 ﻿# -*- coding: utf-8 -*-
 
 from pygments.lexer import RegexLexer
-from pygments.token import *
+from pygments.token import Text,Comment,Literal,String,Number,Name,Punctuation,Keyword
 import re
 
 __all__ = ['CDSLexer']

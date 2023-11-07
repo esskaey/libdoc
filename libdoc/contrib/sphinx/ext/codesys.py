@@ -15,9 +15,10 @@
 from docutils import nodes
 
 from sphinx.locale import _
-from sphinx.environment import NoUri
+from sphinx.errors import NoUri
 from sphinx.util.nodes import set_source_info
-from sphinx.util.compat import Directive, make_admonition
+from docutils.parsers.rst import Directive
+# from sphinx.util.nodes import make_admonition
 from sphinx.domains import Domain
 from docutils.parsers.rst import directives
 from sphinx import addnodes
@@ -111,11 +112,11 @@ class RangesDirective(Directive):
         targetid = 'index-%s' % env.new_serialno('index')
         targetnode = nodes.target('', '', ids=[targetid])
 
-        ad = make_admonition(ranges_node, self.name, [_('Ranges')], self.options,
-                             self.content, self.lineno, self.content_offset,
-                             self.block_text, self.state, self.state_machine)
-        set_source_info(self, ad[0])
-        return [targetnode] + ad
+        # ad = make_admonition(ranges_node, self.name, [_('Ranges')], self.options,
+        #                      self.content, self.lineno, self.content_offset,
+        #                      self.block_text, self.state, self.state_machine)
+        # set_source_info(self, ad[0])
+        return [targetnode] # + ad
 
 
 def process_ranges(app, doctree):
