@@ -1,2 +1,6 @@
 # python environments
 **/env/**
+
+# meta
+**/__pycache__/**
+
