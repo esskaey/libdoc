@@ -123,7 +123,7 @@ def generate(content=None, frame=None, force=False, backup=False, condensed=Fals
     # Every object type will rendered with its related template.
 
     kinematics = None
-    for key, particle in content.particles.iteritems():
+    for key, particle in content.particles.items():
         particle_type = particle.type
 
         if particle_type == "Folder":
@@ -285,7 +285,7 @@ def generate(content=None, frame=None, force=False, backup=False, condensed=Fals
                                 'title': content_info["Title"],
                                 'version': content_info["Version"],
                                 'company': content_info["Company"]}}
-        mapping = {k: v['path'] for k, v in content.mapping.iteritems()}
+        mapping = {k: v['path'] for k, v in content.mapping.items()}
         if mapping is not None:
             manifest.update({'mapping': mapping})
         if kinematics is not None:

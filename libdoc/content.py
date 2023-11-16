@@ -10,8 +10,9 @@ import os
 import json
 import re
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from datetime import datetime
-from abc import ABCMeta, abstractproperty, abstractmethod
+from abc import ABC, abstractmethod, abstractproperty
 from textwrap import wrap, dedent
 import binascii
 
@@ -95,7 +96,8 @@ class PathMap:
     def mapping(self):
         return self._path_map.copy() if self._hashing else None
 
-class Particle(ABCMeta):
+class Particle(ABC):
+
     _path_map = None
 
     def __init__(self, content, key, element, path):
@@ -106,7 +108,7 @@ class Particle(ABCMeta):
         self._key = key
         self._element = element
         self._path, self._slug = Particle._path_map.hash(path, self.name)
-        self._suffix = os.path.splitext(core.EXT_RST)[1]
+        self._suffix = Path(core.EXT_RST).suffix
         self._get_suffix = True
         self._master_doc = core.INDEX_RST
         self._get_master_doc = True
@@ -117,7 +119,7 @@ class Particle(ABCMeta):
 
     @abstractproperty
     def normalized_name(self):
-        raise NotImplementedError
+        pass
 
     @property
     def has_sub_particles(self):
@@ -133,23 +135,23 @@ class Particle(ABCMeta):
 
     @abstractproperty
     def name(self):
-        raise NotImplementedError
+        pass
 
     @abstractproperty
     def type(self):
-        raise NotImplementedError
+        pass
 
     @abstractproperty
     def toc(self):
-        raise NotImplementedError
+        pass
 
     @abstractproperty
     def filename(self):
-        raise NotImplementedError
-    
+        pass
+
     @abstractproperty
     def sub_particle_path(self):
-        raise NotImplementedError
+        pass
 
     def _substitute_filenames(self, doc):
         def process(m):
@@ -160,12 +162,11 @@ class Particle(ABCMeta):
             else:
                 path = "** Unknown file reference: '@({})' **".format(key)
             return path
-
         return re.sub(core.FILE_PATH_REGEX, process, doc)
 
     @abstractproperty
     def doc(self):
-        raise NotImplementedError
+        pass
 
     @property
     def file_suffix(self):
@@ -179,11 +180,12 @@ class Particle(ABCMeta):
     @property
     def children(self):
         if "Content" in self._element:
-            for element in self._element["Content"]:
-                if "Object" in element:
-                    if element["Object"].split('.')[-2] == "Accessors":
-                        continue
-                yield element
+            if "Content" in self._element:
+                for element in self._element["Content"]:
+                    if "Object" in element:
+                        if element["Object"].split('.')[-2] == "Accessors":
+                            continue
+                    yield element
 
     @property
     def master_doc(self):
@@ -347,7 +349,7 @@ class OParticle(Particle):
         symbols = self._content.symbols
 
         pou_attributes = []
-        for k, v in self._particle.get("Attributes", {}).iteritems():
+        for k, v in self._particle.get("Attributes", {}).items():
             s = "{k} := {v}".format(k=k, v=v.get("Value", '')) if v else k
             pou_attributes.append(s)
             ml_pou_attributes = max(len(s), ml_pou_attributes)
@@ -505,7 +507,7 @@ class OParticle(Particle):
                                      *[len(i) for i in initials])
 
                 attributes = []
-                for k, v in variable.get("Attributes", {}).iteritems():
+                for k, v in variable.get("Attributes", {}).items():
                     s = "{k} := {v}".format(k=k, v=v.get("Value", '')) if v else k
                     attributes.append(s)
                     ml_attributes = max(len(s), ml_attributes, core.IOTBL_L_VR_ATTRIBUTES)
@@ -896,7 +898,7 @@ class Particles(Mapping):
     def __len__(self):
         return len(self._particle_list)
 
-    def itervalues(self):
+    def values(self):
         for particle in self._particle_list:
             yield particle
 
@@ -906,7 +908,7 @@ class Particles(Mapping):
     def keys(self):
         return self._particle_cache.keys()
 
-    def iteritems(self):
+    def items(self):
         for particle in self._particle_list:
             yield (particle.key, particle)
 
@@ -966,7 +968,7 @@ class ContentInfo(Mapping):
         body = []
 
         for scope in ("FileHeader", "ProjectInformation"):
-            for name, content in self._info[scope].iteritems():
+            for name, content in self._info[scope].items():
                 if scope == "ProjectInformation":
                     c_type = content["Type"]
                     if name == "Description" and content["Content"]:
@@ -1021,7 +1023,7 @@ class Libraries(Mapping):
 
     def __init__(self, info):
         self._cache = {}
-        for key, lib in info.iteritems():
+        for key, lib in info.items():
             lib['Key'] = key
             self._cache[key] = LibraryInfo(lib)
         self._list = sorted(self._cache.values(), key=lambda x: x['Name'])
@@ -1073,7 +1075,7 @@ class Symbols(Mapping):
 
         self._symbols = {}
         for area in areas:
-            for symbols in area.itervalues():
+            for symbols in area.values():
                 # todo: remove this, after json is fixed
                 if symbols is None or excluded_from_build(symbols):
                     continue
@@ -1086,10 +1088,10 @@ class Symbols(Mapping):
                      qualified_only) in (("Enum", lambda x: x.get("Members", []), False),
                                          ("GVL", lambda x: x.get("Variables", []), False),
                                          ("ParamList", lambda x: x.get("Variables", []), False),
-                                         ("FunctionBlock", lambda x: x.get("Methods", {}).itervalues(), True),
-                                         ("FunctionBlock", lambda x: x.get("Properties", {}).itervalues(), True),
-                                         ("Interface", lambda x: x.get("Methods", {}).itervalues(), True),
-                                         ("Interface", lambda x: x.get("Properties", {}).itervalues(), True)):
+                                         ("FunctionBlock", lambda x: x.get("Methods", {}).values(), True),
+                                         ("FunctionBlock", lambda x: x.get("Properties", {}).values(), True),
+                                         ("Interface", lambda x: x.get("Methods", {}).values(), True),
+                                         ("Interface", lambda x: x.get("Properties", {}).values(), True)):
                     if object_type != current_type:
                         continue
                     # todo: evaluate {attribute 'qualified-access-only'}
@@ -1112,7 +1114,8 @@ class Symbols(Mapping):
     def add_symbol(self, symbol, target=None):
         if target is None:
             target = symbol
-        assert isinstance(target, unicode)
+        # all strings are unicode in python 3    
+        # assert isinstance(target, unicode)
         self._symbols[symbol.upper()] = target.replace(':', '.')
 
     def __getitem__(self, key):
@@ -1131,7 +1134,7 @@ class ExternalFiles(Mapping):
     def __init__(self, files):
         self._files = {}
         if files is not None:
-            for name, file in files.iteritems():
+            for name, file in files.items():
                 if file['Embedded']:
                     self._files[name] = file['Filename']
 
@@ -1210,7 +1213,7 @@ class Content(object):
                         for child_area in ("Methods", "Properties"):
                             if child_area not in particle:
                                 continue
-                            for inherited_particle in particle[child_area].itervalues():
+                            for inherited_particle in particle[child_area].values():
                                 if "InheritedFrom" not in inherited_particle:
                                     continue
                                 name = inherited_particle["Name"]

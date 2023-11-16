@@ -219,7 +219,7 @@ class Cleaner(object):
         :param conf_file_path: The path where the configuration is placed
         :return: None
         """
-        with codecs.open(conf_file_path, 'w', encoding='utf-8') as f:
+        with open(conf_file_path, 'w', encoding='utf-8') as f:
             json.dump(self._conf, f, indent=4, separators=(',', ': '), sort_keys=True, ensure_ascii=False)
 
     def clean(self, content_file_path):
@@ -242,7 +242,7 @@ class Cleaner(object):
                     if sub in particle:
                         path = ".".join([area, particle["Name"], sub])
 
-                        for child in particle[sub].itervalues():
+                        for child in particle[sub].values():
                             self._all.add('.'.join([path, child["Name"]]))
 
                             if sub == "Properties":

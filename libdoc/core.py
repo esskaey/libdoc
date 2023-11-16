@@ -61,10 +61,11 @@ FRAME_JSON = 'frame.json'  #: The name of the frame info document
 MANIFEST_JSON = 'manifest.json'  #: The name of the manifest document for lmd archives
 CONFIG_JSON = 'config.json' # The name of the libdoc configuration file
 SUPPORT_FILES = (INFO_RST, LIBS_RST)
-PROFILE_PATH = ("CODESYS", "Profiles")  #: The path components to the profile folder
-CODESYS_EXE_PATH = ("CODESYS", "Common", "CODESYS.EXE")  #: The path components for the CODESYS.EXE
+PROFILE_PATH = ("EcoStruxure Machine Expert", "V1.2")  #: The path components to the profile folder
+# libdoc path: C:\Program Files\Schneider Electric\EcoStruxure Machine Expert\V1.2\LogicBuilder\DocScripting\3.5.12.60
+CODESYS_EXE_PATH = ("LogicBuilder","DocScripting","3.5.12.60","libdoc.exe")  #: The path components for the CODESYS.EXE
 PROFILE_FILTER = '*[1234567890].profile'  #: filter for pure CODESYS profiles
-CODESYS_FILTER = '3S CODESYS*'  #: filter for the CODESYS folder structure
+CODESYS_FILTER = 'Schneider Electric*'  #: filter for the CODESYS folder structure
 HHC_EXE_PATH = ('HTML Help Workshop', 'hhc.exe')
 LOCALISATION_LIST = ('de', 'es', 'fr', 'it', 'ja', 'ru', 'zh_CHS')  #: default languages for localisation
 KINEMATICS_ATTR = "sm_kin_libdoc"  #: The special attribute for kinematic-fb's
@@ -153,7 +154,8 @@ def normalize(filename):
     http://stackoverflow.com/questions/295135/turn-a-string-into-a-valid-filename-in-python
     """
     cleaned_filename = unidecode(filename).encode('ASCII', 'ignore')
-    normalized_filename = cleaned_filename.translate(str.maketrans('', '', WRONG_CHARS.decode('ascii')))
+    normalized_filename = cleaned_filename
+    #normalized_filename = cleaned_filename.translate(str.maketrans('', '', WRONG_CHARS.decode('ascii') if type(WRONG_CHARS) == bytes else ''))
     return re.sub(r"(?P<vc>[._-])(?P=vc)+", r"\g<vc>", normalized_filename.decode('ascii'))
 
 

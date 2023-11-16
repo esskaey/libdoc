@@ -248,16 +248,25 @@ def make_html(config, build, source, language=None):
         destination = os.path.join(build, 'html')
     else:
         destination = os.path.join(build, 'html', language)
+    # code = build_main(['sphinx-build',
+    #                             '-b', 'html',
+    #                             '-c', config,  # The directory with conf.py,
+    #                             '-d', doctrees,
+    #                             '-t', 'libdoc_html',
+    #                             '-D', "language={}".format(language or 'en'),
+    #                             source,  # Source directory
+    #                             destination,  # Destination directory
+    #                             ])
+    # return code
     code = build_main(['sphinx-build',
-                                '-b', 'html',
-                                '-c', config,  # The directory with conf.py,
-                                '-d', doctrees,
-                                '-t', 'libdoc_html',
-                                '-D', "language={}".format(language or 'en'),
-                                source,  # Source directory
-                                destination,  # Destination directory
-                                ])
-    return code
+                            '-b', 'html',
+                            '-c', config,  # The directory with conf.py,
+                            '-d', doctrees,
+                            '-t', 'libdoc_html',
+                            '-D', "language={}".format(language or 'en'),
+                            source,  # Source directory
+                            destination,  # Destination directory
+                            ])
 
 
 @transformer('pdf', 'Transforms the content of <source> to a document in pdf format.')
