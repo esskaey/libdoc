@@ -180,12 +180,11 @@ class Particle(ABC):
     @property
     def children(self):
         if "Content" in self._element:
-            if "Content" in self._element:
-                for element in self._element["Content"]:
-                    if "Object" in element:
-                        if element["Object"].split('.')[-2] == "Accessors":
-                            continue
-                    yield element
+            for element in self._element["Content"]:
+                if "Object" in element:
+                    if element["Object"].split('.')[-2] == "Accessors":
+                        continue
+                yield element
 
     @property
     def master_doc(self):
